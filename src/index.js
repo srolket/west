@@ -141,6 +141,25 @@ class Trasher extends Dog {
 
 }
 
+class Gatling extends Creature {
+    constructor() {
+        super('Гатлинг', 6);
+    }
+
+    attack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const oppositeCards = gameContext.oppositePlayer.table;
+
+        for (const card of oppositeCards) {
+            taskQueue.push(onDone => {
+                card.takeDamage(2, this, gameContext, onDone);
+            });
+        }
+
+        taskQueue.continueWith(continuation);
+    }
+}
+
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
