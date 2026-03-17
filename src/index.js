@@ -41,6 +41,10 @@ function getCreatureDescription(card) {
 }*/
 
 class Creature extends Card {
+    constructor(name, maxPower) {
+        super(name, maxPower);
+    }
+
     getDescriptions () {
         return [getCreatureDescription(this), super.getDescriptions()]
     }
@@ -48,8 +52,8 @@ class Creature extends Card {
 
 
 class Duck extends Creature {
-    constructor() {
-        super('Мирная утка', 2);
+    constructor(name = 'Мирная утка', maxPower = 2) {
+        super(name, maxPower);
     }
 
     quacks() {
@@ -62,8 +66,59 @@ class Duck extends Creature {
 }
 
 class Dog extends Creature {
+    constructor(name = 'Пес-бандит', maxPower = 3) {
+        super(name, maxPower);
+    }
+}
+
+
+class Lad extends Dog {
     constructor() {
-        super('Пес-бандит', 3);
+        super('Браток', 2);
+    }
+
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() + 1);
+        super.doAfterComingIntoPlay(gameContext, continuation);
+    }
+
+    doBeforeRemoving(continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() - 1);
+        super.doBeforeRemoving(continuation);
+    }
+
+    static getBonus() {
+        const count = this.getInGameCount();
+        return count * (count + 1) / 2;
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        this.view.signalAbility(() => {
+            super.modifyDealedDamageToCreature(value + Lad.getBonus(), toCard, gameContext, continuation);
+        });
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        this.view.signalAbility(() => {
+            super.modifyTakenDamage(value - Lad.getBonus(), fromCard, gameContext, continuation);
+        });
+    }
+
+    getDescriptions() {
+        const descriptions = super.getDescriptions();
+        if (Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature') ||
+            Lad.prototype.hasOwnProperty('modifyTakenDamage')) {
+            descriptions.unshift('Чем их больше, тем они сильнее');
+        }
+        return descriptions;
     }
 }
 
@@ -92,10 +147,10 @@ const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
-    new Duck(),
 ];
 const banditStartDeck = [
-    new Trasher(),
+    new Lad(),
+    new Lad(),
 ];
 
 
