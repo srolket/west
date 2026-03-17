@@ -160,14 +160,53 @@ class Gatling extends Creature {
     }
 }
 
+class Rogue extends Creature {
+    constructor(name = 'Изгой', maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const { oppositePlayer, position, updateView } = gameContext;
+        const oppositeCard = oppositePlayer.table[position];
+        if (oppositeCard) {
+            const prototype = Object.getPrototypeOf(oppositeCard);
+            const abilitiesToSteal =[
+                'modifyDealedDamageToCreature',
+                'modifyDealedDamageToPlayer',
+                'modifyTakenDamage'
+            ];
+
+            let isStolen = false;
+
+            for (const ability of abilitiesToSteal) {
+                if (prototype.hasOwnProperty(ability)) {
+                    this[ability] = prototype[ability];
+
+                    delete prototype[ability];
+
+                    isStolen = true;
+                }
+            }
+
+            if (isStolen) {
+                updateView();
+            }
+        }
+
+        super.doBeforeAttack(gameContext, continuation);
+    }
+}
+
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
+    new Rogue(),
 ];
 const banditStartDeck = [
+    new Lad(),
     new Lad(),
     new Lad(),
 ];
