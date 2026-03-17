@@ -43,25 +43,34 @@ function getCreatureDescription(card) {
 class Creature extends Card {
     constructor(name, maxPower) {
         super(name, maxPower);
+        this._currentPower = maxPower;
     }
 
-    getDescriptions () {
+    get currentPower() {
+        return this._currentPower;
+    }
+
+    set currentPower(value) {
+        this._currentPower = Math.min(value, this.maxPower);
+    }
+
+    getDescriptions() {
         return [getCreatureDescription(this), super.getDescriptions()]
     }
 }
 
 
 class Duck extends Creature {
-    constructor(name = 'Мирная утка', maxPower = 2) {
+    constructor(name = "Мирная утка", maxPower = 2) {
         super(name, maxPower);
     }
 
     quacks() {
-        console.log('quack')
+        console.log('quack');
     }
 
     swims() {
-        console.log('float: both;')
+        console.log('float: both;');
     }
 }
 
@@ -138,7 +147,6 @@ class Trasher extends Dog {
         descriptions.unshift('Получает на 1 меньше урона');
         return descriptions;
     }
-
 }
 
 class Gatling extends Creature {
@@ -166,11 +174,11 @@ class Rogue extends Creature {
     }
 
     doBeforeAttack(gameContext, continuation) {
-        const { oppositePlayer, position, updateView } = gameContext;
+        const {oppositePlayer, position, updateView} = gameContext;
         const oppositeCard = oppositePlayer.table[position];
         if (oppositeCard) {
             const prototype = Object.getPrototypeOf(oppositeCard);
-            const abilitiesToSteal =[
+            const abilitiesToSteal = [
                 'modifyDealedDamageToCreature',
                 'modifyDealedDamageToPlayer',
                 'modifyTakenDamage'
@@ -190,6 +198,30 @@ class Rogue extends Creature {
 
             if (isStolen) {
                 updateView();
+            }
+        }
+
+        super.doBeforeAttack(gameContext, continuation);
+    }
+}
+
+class Brewer extends Duck {
+    constructor() {
+        super('Пивовар', 2);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const { currentPlayer, oppositePlayer } = gameContext;
+        const allCards = currentPlayer.table.concat(oppositePlayer.table);
+
+        for (const card of allCards) {
+            if (isDuck(card)) {
+                card.maxPower += 1;
+                card.currentPower += 2;
+
+                card.view.signalHeal(() => {
+                    card.updateView();
+                });
             }
         }
 
@@ -236,11 +268,14 @@ class Nemo extends Creature {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-    new Nemo(),
+    new Duck(),
+    new Brewer(),
 ];
 const banditStartDeck = [
-    new Lad(),
-    new Lad(),
+    new Dog(),
+    new Dog(),
+    new Dog(),
+    new Dog(),
 ];
 
 
