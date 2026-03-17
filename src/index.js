@@ -198,15 +198,47 @@ class Rogue extends Creature {
 }
 
 
+class PseudoDuck extends Dog {
+    constructor() {
+        super('Псевдоутка', 3);
+    }
+
+    quacks() {
+        console.log('quack')
+    }
+
+    swims() {
+        console.log('float: both;')
+    }
+}
+
+
+class Nemo extends Creature {
+    constructor(name = 'Немо', maxPower = 4) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const { oppositePlayer, position, updateView } = gameContext;
+        const oppositeCard = oppositePlayer.table[position];
+
+        if (oppositeCard) {
+            const stolenPrototype = Object.getPrototypeOf(oppositeCard);
+            Object.setPrototypeOf(this, stolenPrototype);
+            updateView();
+            this.doBeforeAttack(gameContext, continuation);
+        } else {
+            super.doBeforeAttack(gameContext, continuation);
+        }
+    }
+}
+
+
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
-    new Duck(),
-    new Duck(),
-    new Duck(),
-    new Rogue(),
+    new Nemo(),
 ];
 const banditStartDeck = [
-    new Lad(),
     new Lad(),
     new Lad(),
 ];
